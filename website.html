@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Website Blocker</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #020c18;
+  --bg2:       #041022;
+  --panel:     #061428;
+  --panel2:    #0a1f3a;
+  --border:    #0d3a5c;
+  --cyan:      #00e5ff;
+  --cyan2:     #00b8d4;
+  --cyan-dim:  rgba(0,229,255,0.12);
+  --cyan-glow: rgba(75, 156, 165, 0.35);
+  --red:       #ff3b5c;
+  --red-dim:   rgba(255,59,92,0.12);
+  --green:     #00ff88;
+  --yellow:    #ffc400;
+  --text:      #c8e8f5;
+  --text-dim:  #3a6a8a;
+  --text-mid:  #6a9ab8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Share Tech Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,100,180,0.18) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+  animation: fadeDown 0.7s ease forwards;
+}
+
+@keyframes fadeDown {
+  from { opacity:0; transform: translateY(-20px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.header-badge {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--cyan);
+  border: 1px solid var(--border);
+  padding: 4px 14px;
+  margin-bottom: 14px;
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0%,100% { border-color: var(--border); }
+  50%      { border-color: var(--cyan2); box-shadow: 0 0 12px var(--cyan-glow); }
+}
+
+.header h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--cyan);
+  text-shadow: 0 0 30px var(--cyan-glow), 0 0 60px rgba(0,229,255,0.15);
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.header-sub {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+}
+
+/* STATS */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(14px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.stat-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.stat-card.s1::before { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+.stat-card.s2::before { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+.stat-card.s3::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+
+.stat-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.s1 .stat-value { color: var(--red); text-shadow: 0 0 16px rgba(255,59,92,0.5); }
+.s2 .stat-value { color: var(--cyan); text-shadow: 0 0 16px var(--cyan-glow); }
+.s3 .stat-value { color: var(--green); text-shadow: 0 0 16px rgba(0,255,136,0.4); }
+
+.stat-label {
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* GRID */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+/* PANEL */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel2);
+}
+
+.panel-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+
+.panel-body { padding: 18px; }
+
+.field-label {
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="time"] {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  padding: 10px 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 12px;
+}
+
+input::placeholder { color: var(--text-dim); font-size: 12px; }
+input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgba(0,229,255,0.1);
+}
+
+.input-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.input-row-2 input { margin-bottom: 0; }
+
+.btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 11px 16px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+  margin-top: 10px;
+}
+
+.btn-cyan {
+  background: var(--cyan);
+  color: var(--bg);
+  font-weight: 700;
+}
+.btn-cyan:hover {
+  background: #33eeff;
+  box-shadow: 0 0 24px var(--cyan-glow);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--cyan);
+  border: 1px solid var(--cyan2);
+}
+.btn-outline:hover {
+  background: var(--cyan-dim);
+  transform: translateY(-1px);
+}
+
+.btn-yellow {
+  background: transparent;
+  color: var(--yellow);
+  border: 1px solid rgba(255,196,0,0.4);
+  margin-top: 10px;
+}
+.btn-yellow:hover {
+  background: rgba(255,196,0,0.08);
+}
+
+/* LIST PANEL */
+.list-panel {
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.list-toolbar {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.search-input {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-input::placeholder { color: var(--text-dim); }
+.search-input:focus { border-color: var(--cyan); }
+
+#list {
+  list-style: none;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 12px;
+}
+#list::-webkit-scrollbar { width: 3px; }
+#list::-webkit-scrollbar-thumb { background: var(--border); }
+
+#list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  margin-bottom: 6px;
+  animation: slideIn 0.25s ease forwards;
+  transition: border-color 0.2s, background 0.2s;
+}
+#list li:hover {
+  border-color: rgba(0,229,255,0.3);
+  background: rgba(0,229,255,0.03);
+}
+
+@keyframes slideIn {
+  from { opacity:0; transform: translateX(-6px); }
+  to   { opacity:1; transform: translateX(0); }
+}
+
+.site-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.blocked-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 6px rgba(255,59,92,0.7);
+  flex-shrink: 0;
+}
+
+.site-name {
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.timer-badge {
+  font-size: 10px;
+  color: var(--yellow);
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.unblock-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.unblock-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.empty-icon { font-size: 30px; margin-bottom: 10px; opacity: 0.25; display: block; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--panel2);
+  border: 1px solid var(--cyan2);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 10px 24px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+  box-shadow: 0 0 20px rgba(0,229,255,0.15);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  animation: fadeUp 0.6s 0.4s ease both;
+}
+.footer span { margin: 0 10px; }
+.online-dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* SCANLINE */
+.scanline {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.12;
+  animation: scan 5s linear infinite;
+  pointer-events: none;
+  z-index: 999;
+}
+@keyframes scan {
+  0%   { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* DAYS */
+.day-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 4px 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.day-btn.active {
+  background: rgba(255,196,0,0.12);
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+/* EXPORT BTN */
+.export-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 4px 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.export-btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* SCHEDULE LIST */
+.sched-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 5px;
+  font-size: 10px;
+  color: var(--text-mid);
+  background: var(--bg2);
+}
+.sched-remove {
+  font-size: 10px;
+  background: transparent;
+  border: none;
+  color: var(--red);
+  cursor: pointer;
+  padding: 0 4px;
+}
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">◈ SYSTEM ACTIVE ◈</div>
+    <h1>AI WEBSITE BLOCKER</h1>
+    <div class="header-sub">[ Network Access Control Interface v2.0 ]</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card s1">
+      <div class="stat-value" id="stat-blocked">0</div>
+      <div class="stat-label">Blocked Sites</div>
+    </div>
+    <div class="stat-card s2">
+      <div class="stat-value" id="stat-timers">0</div>
+      <div class="stat-label">Active Timers</div>
+    </div>
+    <div class="stat-card s3">
+      <div class="stat-value" id="stat-unblocked">0</div>
+      <div class="stat-label">Unblocked Today</div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+
+    <!-- Block Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot"></div>
+        <div class="panel-title">Block Website</div>
+      </div>
+      <div class="panel-body">
+        <div class="field-label">Target URL</div>
+        <input type="text" id="website" placeholder="e.g. youtube.com">
+        <div class="field-label">Timer Duration (minutes)</div>
+        <input type="number" id="time" placeholder="leave empty for permanent">
+        <button class="btn btn-cyan" onclick="addWebsite()">▶ BLOCK NOW</button>
+        <button class="btn btn-outline" onclick="addWithTimer()">⏱ BLOCK WITH TIMER</button>
+      </div>
+    </div>
+
+    <!-- Schedule Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:var(--yellow);box-shadow:0 0 8px var(--yellow)"></div>
+        <div class="panel-title" style="color:var(--yellow)">Schedule Block</div>
+      </div>
+      <div class="panel-body">
+        <div class="field-label">Target URL</div>
+        <input type="text" id="sched-site" placeholder="e.g. instagram.com">
+        <div class="field-label">Start & End Time</div>
+        <div class="input-row-2" style="margin-bottom:12px">
+          <input type="time" id="sched-start" style="margin-bottom:0">
+          <input type="time" id="sched-end" style="margin-bottom:0">
+        </div>
+        <div class="field-label">Days</div>
+        <div id="days-selector" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px"></div>
+        <button class="btn btn-yellow" onclick="scheduleBlock()">◷ SET SCHEDULE</button>
+        <div id="schedules-list" style="margin-top:12px;max-height:90px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Blocked Sites List -->
+  <div class="panel list-panel">
+    <div class="panel-header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="panel-dot" style="background:var(--red);box-shadow:0 0 8px var(--red)"></div>
+        <div class="panel-title" style="color:var(--red)">Blocked Sites</div>
+      </div>
+      <button class="export-btn" onclick="exportList()">↓ Export List</button>
+    </div>
+    <div class="list-toolbar">
+      <input class="search-input" type="text" id="search" placeholder="🔍  filter blocked sites..." oninput="filterSites()">
+    </div>
+    <ul id="list"></ul>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span><span class="online-dot"></span>Flask Server Online</span>
+    <span>·</span>
+    <span>MongoDB Connected</span>
+    <span>·</span>
+    <span>Hosts File Active</span>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let timers = {};
+let allSites = [];
+let unblockedToday = parseInt(localStorage.getItem('unblockedToday') || '0');
+let schedules = JSON.parse(localStorage.getItem('schedules') || '[]');
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let selectedDays = [];
+
+function initDays() {
+  const el = document.getElementById('days-selector');
+  DAYS.forEach((d, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = d;
+    btn.className = 'day-btn';
+    btn.onclick = () => {
+      const idx = selectedDays.indexOf(i);
+      if (idx === -1) { selectedDays.push(i); btn.classList.add('active'); }
+      else { selectedDays.splice(idx, 1); btn.classList.remove('active'); }
+    };
+    el.appendChild(btn);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function updateStats() {
+  document.getElementById('stat-blocked').textContent = allSites.length;
+  document.getElementById('stat-timers').textContent = Object.keys(timers).length;
+  document.getElementById('stat-unblocked').textContent = unblockedToday;
+}
+
+function addWebsite() {
+  const site = document.getElementById('website').value.trim();
+  if (!site) { showToast('⚠ Enter a website'); return; }
+  fetch('/add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({website: site}) })
+  .then(r => r.json())
+  .then(() => {
+    showToast('🚫 ' + site + ' blocked');
+    document.getElementById('website').value = '';
+    loadSites();
+  });
+}
+
+function addWithTimer() {
+  const site = document.getElementById('website').value.trim();
+  const time = document.getElementById('time').value;
+  if (!site || !time) { showToast('⚠ Enter website and minutes'); return; }
+  let totalSeconds = parseInt(time) * 60;
+  fetch('/add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({website: site}) })
+  .then(r => r.json())
+  .then(() => {
+    showToast('⏱ ' + site + ' blocked for ' + time + ' min');
+    document.getElementById('website').value = '';
+    document.getElementById('time').value = '';
+    loadSites();
+    timers[site] = totalSeconds;
+    updateStats();
+    const interval = setInterval(() => {
+      timers[site]--;
+      updateTimerUI();
+      if (timers[site] <= 0) {
+        clearInterval(interval);
+        fetch('/unblock', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({website: site}) })
+        .then(r => r.json())
+        .then(() => {
+          showToast('✓ ' + site + ' timer ended → unblocked');
+          unblockedToday++;
+          localStorage.setItem('unblockedToday', unblockedToday);
+          delete timers[site];
+          loadSites();
+        });
+      }
+    }, 1000);
+  });
+}
+
+function scheduleBlock() {
+  const site = document.getElementById('sched-site').value.trim();
+  const start = document.getElementById('sched-start').value;
+  const end = document.getElementById('sched-end').value;
+  if (!site || !start || !end || selectedDays.length === 0) {
+    showToast('⚠ Fill all fields and select days'); return;
+  }
+  schedules.push({ site, start, end, days: [...selectedDays] });
+  localStorage.setItem('schedules', JSON.stringify(schedules));
+  showToast('◷ Schedule set for ' + site);
+  document.getElementById('sched-site').value = '';
+  document.getElementById('sched-start').value = '';
+  document.getElementById('sched-end').value = '';
+  selectedDays = [];
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+  renderSchedules();
+}
+
+function renderSchedules() {
+  const el = document.getElementById('schedules-list');
+  el.innerHTML = '';
+  schedules.forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'sched-item';
+    const dayNames = s.days.map(n => DAYS[n]).join(',');
+    d.innerHTML = `<span style="color:var(--yellow)">${s.site}</span><span>${s.start}–${s.end} [${dayNames}]</span><button class="sched-remove" onclick="removeSchedule(${i})">✕</button>`;
+    el.appendChild(d);
+  });
+}
+
+function removeSchedule(i) {
+  schedules.splice(i, 1);
+  localStorage.setItem('schedules', JSON.stringify(schedules));
+  renderSchedules();
+  showToast('Schedule removed');
+}
+
+function checkSchedules() {
+  const now = new Date();
+  const dayNow = now.getDay();
+  const timeNow = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  schedules.forEach(s => {
+    if (!s.days.includes(dayNow)) return;
+    if (timeNow === s.start) {
+      fetch('/add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({website: s.site}) })
+      .then(() => { showToast('◷ Scheduled block: ' + s.site); loadSites(); });
+    }
+    if (timeNow === s.end) {
+      fetch('/unblock', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({website: s.site}) })
+      .then(() => { showToast('◷ Schedule ended: ' + s.site + ' unblocked'); loadSites(); });
+    }
+  });
+}
+
+function exportList() {
+  if (allSites.length === 0) { showToast('⚠ No sites to export'); return; }
+  const content = allSites.map(s => s.website).join('\n');
+  const blob = new Blob([content], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'blocked-sites.txt';
+  a.click();
+  showToast('↓ Exported ' + allSites.length + ' sites');
+}
+
+function filterSites() {
+  const q = document.getElementById('search').value.toLowerCase();
+  document.querySelectorAll('#list li').forEach(li => {
+    const site = li.getAttribute('data-site') || '';
+    li.style.display = site.toLowerCase().includes(q) ? 'flex' : 'none';
+  });
+}
+
+function updateTimerUI() {
+  document.querySelectorAll('#list li').forEach(li => {
+    const site = li.getAttribute('data-site');
+    let badge = li.querySelector('.timer-badge');
+    if (timers[site]) {
+      const min = Math.floor(timers[site] / 60);
+      const sec = timers[site] % 60;
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'timer-badge';
+        li.querySelector('.site-left').appendChild(badge);
+      }
+      badge.textContent = `⏱ ${min}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+  });
+  updateStats();
+}
+
+function loadSites() {
+  fetch('/get')
+  .then(r => r.json())
+  .then(data => {
+    allSites = data;
+    updateStats();
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    if (data.length === 0) {
+      list.innerHTML = `<div class="empty"><span class="empty-icon">🛡</span>NO SITES BLOCKED<br><span style="font-size:9px;opacity:0.5">system is idle</span></div>`;
+      return;
+    }
+    data.forEach(item => {
+      const li = document.createElement('li');
+      li.setAttribute('data-site', item.website);
+      const left = document.createElement('div');
+      left.className = 'site-left';
+      const dot = document.createElement('span');
+      dot.className = 'blocked-dot';
+      const name = document.createElement('span');
+      name.className = 'site-name';
+      name.textContent = item.website;
+      left.appendChild(dot);
+      left.appendChild(name);
+      const btn = document.createElement('button');
+      btn.textContent = 'Unblock';
+      btn.className = 'unblock-btn';
+      btn.onclick = () => {
+        fetch('/unblock', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({website: item.website}) })
+        .then(r => r.json())
+        .then(() => {
+          showToast('✓ ' + item.website + ' unblocked');
+          unblockedToday++;
+          localStorage.setItem('unblockedToday', unblockedToday);
+          delete timers[item.website];
+          loadSites();
+        });
+      };
+      li.appendChild(left);
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    updateTimerUI();
+    filterSites();
+  });
+}
+
+initDays();
+renderSchedules();
+loadSites();
+setInterval(checkSchedules, 30000);
+</script>
+</body>
+</html>
